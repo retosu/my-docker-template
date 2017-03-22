@@ -1,0 +1,52 @@
+version: '2'
+services:
+  datastore:
+    build: ./datastore
+  mysql:
+    build: ./mysql
+    ports:
+      - '3306:3306'
+    volumes_from:
+      - datastore
+  redis:
+    image: redis
+    networks:
+      - default
+    ports:
+      - '6379:6379'
+    volumes_from:
+      - datastore
+  assets:
+    build: ./webpack
+    volumes:
+      - ./webpack:/app/webpack
+    volumes_from:
+      - datastore
+    ports:
+      - '8080:8080'
+  rails:
+    build: ./rails
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./rails:/app/rails
+    volumes_from:
+      - datastore
+    environment:
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: root
+      REDIS_URL: "redis://redis:6379"
+    depends_on:
+      - mysql
+      - redis
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  bundle_install:
+    driver: local
+  bundle:
+    driver: local
+  node_modules:
+    driver: local
